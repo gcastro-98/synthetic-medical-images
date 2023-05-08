@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 
-from hamgan.static import IMAGE_SIZE, LATENT_DIM, NUM_CLASSES
+from hamgan.static import LATENT_DIM, NUM_CLASSES
+
+# TODO: implement the same DCGAN as https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
+#  then convert it into conditional: https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/
 
 
 # Generator model
@@ -10,25 +13,22 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
         self.label_emb = nn.Embedding(NUM_CLASSES, NUM_CLASSES)
         self.model = nn.Sequential(
-            nn.Linear(LATENT_DIM + NUM_CLASSES, 128),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(128, 256),
-            nn.BatchNorm1d(256),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 512),
-            nn.BatchNorm1d(512),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 1024),
-            nn.BatchNorm1d(1024),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(1024, IMAGE_SIZE * IMAGE_SIZE * 3),
+            nn.ConvTranspose2d(LATENT_DIM + NUM_CLASSES, 256, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
             nn.Tanh()
         )
 
     def forward(self, noise, labels):
-        gen_input = torch.cat((self.label_emb(labels), noise), -1)
+        gen_input = torch.cat((self.label_emb(labels), noise), dim=1).unsqueeze(2).unsqueeze(3)
         img = self.model(gen_input)
-        img = img.view(img.size(0), 3, IMAGE_SIZE, IMAGE_SIZE)
         return img
 
 
@@ -38,18 +38,19 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.label_emb = nn.Embedding(NUM_CLASSES, NUM_CLASSES)
         self.model = nn.Sequential(
-            nn.Linear(NUM_CLASSES + IMAGE_SIZE * IMAGE_SIZE * 3, 1024),
+            nn.Conv2d(NUM_CLASSES + 3, 64, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(1024, 512),
+            nn.Conv2d(64, 128, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
+            nn.Conv2d(128, 256, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1),
+            nn.Conv2d(256, 1, 4, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
     def forward(self, img, labels):
-        d_in = img.view(img.size(0), -1)
-        dis_input = torch.cat((self.label_emb(labels), d_in), -1)
-        validity = self.model(dis_input)
-        return validity
+        disc_input = torch.cat((self.label_emb(labels), img), dim=1)
+        validity = self.model(disc_input)
+        return validity.view(-1, 1).squeeze(1)

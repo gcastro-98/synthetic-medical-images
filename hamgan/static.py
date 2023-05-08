@@ -5,6 +5,9 @@ execution.
 
 # General parameters
 SEED: int = 42
+INPUT_PATH: str = 'data'
+OUTPUT_PATH: str = 'output'
+MODELS_PATH: str = 'models'
 
 # Data parameters
 IMAGE_SIZE: int = 128

@@ -8,7 +8,7 @@ from typing import List, Tuple
 from hamgan.data import get_data_loaders
 from hamgan.gan import Generator, Discriminator
 from hamgan.static import SEED, LEARNING_RATE, BETA_1, NUM_EPOCHS, \
-    LATENT_DIM, LABEL_TO_CLASS
+    LATENT_DIM, LABEL_TO_CLASS, OUTPUT_PATH, MODELS_PATH
 
 
 # random seed for reproducibility
@@ -16,8 +16,8 @@ torch.manual_seed(SEED)
 # we set the device (GPU if available)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # we create directory to save the generated images and the trained models
-os.makedirs("output", exist_ok=True)
-os.makedirs("models", exist_ok=True)
+os.makedirs(OUTPUT_PATH, exist_ok=True)
+os.makedirs(MODELS_PATH, exist_ok=True)
 
 
 def train_gan(checkpoint: bool = False) -> None:
@@ -63,6 +63,8 @@ def train_gan(checkpoint: bool = False) -> None:
             fake_images = generator(noise, labels)
 
             # Discriminator loss on real images
+            # TODO: debug
+            print(discriminator(real_images, labels).size())
             real_loss = adversarial_loss(discriminator(real_images, labels),
                                          valid)
             # Discriminator loss on fake images
@@ -114,22 +116,22 @@ def train_gan(checkpoint: bool = False) -> None:
                 fake_images = (fake_images + 1) / 2
                 save_image(
                     fake_images,
-                    os.path.join("output", f"epoch_{epoch + 1}.png"),
+                    os.path.join(OUTPUT_PATH, f"epoch_{epoch + 1}.png"),
                     nrow=5, normalize=True)
 
             # save models as checkpoint
             if checkpoint:
                 torch.save(generator.state_dict(),
-                           os.path.join("models", "generator.pth"))
+                           os.path.join(MODELS_PATH, "generator.pth"))
                 torch.save(discriminator.state_dict(),
-                           os.path.join("models", "discriminator.pth"))
+                           os.path.join(MODELS_PATH, "discriminator.pth"))
 
     # save the trained generator
     torch.save(generator.state_dict(),
-               os.path.join("models", "generator.pth"))
+               os.path.join(MODELS_PATH, "generator.pth"))
     # as well as the trained discriminator
     torch.save(discriminator.state_dict(),
-               os.path.join("models", "discriminator.pth"))
+               os.path.join(MODELS_PATH, "discriminator.pth"))
 
     _plot_losses(generator_losses, discriminator_losses)
 
@@ -142,9 +144,10 @@ def _plot_losses(g_losses: List[float], d_losses: List[float]) -> None:
     plt.xlabel("iterations")
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig(os.path.join('output', 'losses.png'), dpi=200)
+    plt.savefig(os.path.join(OUTPUT_PATH, 'losses.png'), dpi=200)
     plt.show()
 
 
 def _labels_to_tensor(labels: Tuple[str]) -> torch.Tensor:
-    return torch.tensor(tuple(LABEL_TO_CLASS[_l] for _l in labels))
+    return torch.tensor(
+        tuple(LABEL_TO_CLASS[_l] for _l in labels))

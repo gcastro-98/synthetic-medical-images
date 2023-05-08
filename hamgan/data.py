@@ -6,11 +6,11 @@ from torchvision import transforms
 from typing import Tuple
 from torch import Generator as _DataGenerator
 
-from hamgan.static import BATCH_SIZE, IMAGE_SIZE, SEED
+from hamgan.static import INPUT_PATH, BATCH_SIZE, IMAGE_SIZE, SEED
 
 
 class HAM10000Dataset(Dataset):
-    def __init__(self, root_dir: str = 'data',
+    def __init__(self, root_dir: str = INPUT_PATH,
                  metadata_file: str = 'HAM10000_metadata.csv',
                  data_transforms: transforms = None) -> None:
         self.root_dir = root_dir
