@@ -33,8 +33,24 @@ def seed_everything():
     torch.backends.cudnn.deterministic = True
 
 
+def __generate_random_noise() -> Tensor:
+    return torch.randn(BATCH_SIZE, nz, device=DEVICE)
+
+
+def __generate_random_labels() -> Tensor:
+    label = torch.zeros(BATCH_SIZE, NUM_CLASSES, device=DEVICE)
+    for i in range(BATCH_SIZE):
+        x = np.random.randint(0, NUM_CLASSES)
+        label[i][x] = 1
+    return label
+
+
 # random seeds for reproducibility
 seed_everything()
+# noise and labels from which images will be generated at checkpoint
+_checkpoint_noise = __generate_random_noise()
+_checkpoint_labels = __generate_random_labels()
+
 # we create directory to save the generated images and the trained models
 os.makedirs(OUTPUT_PATH, exist_ok=True)
 os.makedirs(MODELS_PATH, exist_ok=True)
@@ -117,12 +133,12 @@ def train_gan(data_loader: DataLoader, _save_images: bool = True,
             with torch.no_grad():
                 logger.debug("CHECKPOINT: saving some "
                              f"generated images at '{OUTPUT_PATH}' directory")
-                _random_noise = torch.randn(BATCH_SIZE, nz, device=DEVICE)
-                _random_one_hots = __generate_random_labels()
-                fake_images = net_g(_random_noise, _random_one_hots)
+
+                checkpoint_images = net_g(
+                    _checkpoint_noise, _checkpoint_labels)
 
                 # we re-scale generated images to [0, 1] and save them
-                save_image((fake_images + 1) / 2,
+                save_image((checkpoint_images + 1) / 2,
                            os.path.join(OUTPUT_PATH, f"epoch_{epoch + 1}.png"),
                            nrow=8, normalize=True)
 
@@ -151,14 +167,6 @@ def train_gan(data_loader: DataLoader, _save_images: bool = True,
     return net_g, net_d
 
 
-def __generate_random_labels() -> Tensor:
-    label = torch.zeros(BATCH_SIZE, NUM_CLASSES, device=DEVICE)
-    for i in range(BATCH_SIZE):
-        x = np.random.randint(0, NUM_CLASSES)
-        label[i][x] = 1
-    return label
-
-
 def weights_init(m) -> callable:
     class_name = m.__class__.__name__
     if class_name.find('Conv') != -1:
@@ -168,7 +176,8 @@ def weights_init(m) -> callable:
         m.bias.data.fill_(0)
 
 
-def _plot_losses(g_losses: List[float], d_losses: List[float]) -> None:
+def _plot_losses(g_losses: List[float], d_losses: List[float],
+                 _show: bool = False) -> None:
     plt.figure(figsize=(10, 5))
     plt.title("Generator and Discriminator Loss During Training")
     plt.plot(g_losses, label="Generator")
@@ -177,7 +186,9 @@ def _plot_losses(g_losses: List[float], d_losses: List[float]) -> None:
     plt.ylabel("Loss")
     plt.legend()
     plt.savefig(os.path.join('.img', 'losses.png'), dpi=200)
-    plt.show()
+    if _show:
+        plt.show()
+    plt.close()
 
 
 def _labels_to_tensor(labels: Tuple[str]) -> torch.Tensor:

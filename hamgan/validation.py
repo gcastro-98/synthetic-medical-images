@@ -59,7 +59,7 @@ def plot_fake_images(
     plt.figure(figsize=(10, 10))
     for i in range(9):
         # plt.subplot(3, 3, i+1)
-        figure.add_subplot(rows, cols, i)
+        figure.add_subplot(rows, cols, i + 1)
         plt.title(_label_names[i])
         plt.axis("off")
         plt.imshow(images[i])

@@ -37,7 +37,7 @@ NUM_CLASSES: int = len(LABEL_TO_CLASS)
 # Training parameters
 # ---------------------
 BATCH_SIZE: int = 64 if IMAGE_SIZE == 64 else 32
-NUM_EPOCHS: int = 50
+NUM_EPOCHS: int = 120
 
 # ---------------------
 # Hyperparameters
@@ -48,7 +48,7 @@ BETA_1: float = 0.5
 
 # same nomenclature
 # as https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
-nz: int = 100  # length of latent vector
+nz: int = 128  # length of latent vector
 ngf: int = 64  # depth of feature maps carried through the generator.
 ndf: int = 64  # depth of feature maps propagated through the discriminator
 # ngpu: int = 1
