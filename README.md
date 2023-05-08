@@ -3,9 +3,10 @@ Automated diagnosis of any kind are hampered by the small size, lack of
 diversity and expensiveness of available dataset of medical images. To tackle
 this problem, several approaches using generative models have been applied.
 
-Thence, in this project we will be using a (conditional) Generative 
-Adversarial Network (cGAN) to synthetically generate medical images; 
-concretely, of dermatoscopic images of pigmented skin lesions.
+Thence, in this project we will be using a (conditional) [Deep Convolutional 
+Generative Adversarial Network](https://arxiv.org/abs/1411.1784) 
+(_cDCGAN_) to synthetically generate medical images; concretely, 
+dermatological images of pigmented skin lesions.
 
 ### Original samples
 

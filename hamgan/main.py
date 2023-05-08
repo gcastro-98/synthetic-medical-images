@@ -1,15 +1,18 @@
 from hamgan.train import train_gan
 from hamgan.data import get_data_loaders
 from hamgan.validation import plot_fake_images
+from hamgan.logger import Logger
+
+logger = Logger()
 
 
 def main() -> None:
     # we obtain dataloader (`HAM10000Dataset` initialized under the hood)
-    print("Getting data loader")
+    logger.info("Getting data loader")
     train_loader, _, _, _ = get_data_loaders()
-    print("Initializing generator & discriminator")
+    logger.info("Initializing generator & discriminator")
     generator, discriminator = train_gan(train_loader)
-    print("Visualizing the results")
+    logger.info("Visualizing some generated images")
     plot_fake_images(generator)
 
 

@@ -22,7 +22,6 @@ class Generator64(nn.Module):
         assert IMAGE_SIZE == 64, \
             f"This architecture is not suitable for IMAGE_SIZE = {IMAGE_SIZE}"
         super(Generator64, self).__init__()
-        # self.ngpu = _ngpu
 
         self.y_label = nn.Sequential(
             nn.Linear(NUM_CLASSES, n_dnn),  # 120, 1000

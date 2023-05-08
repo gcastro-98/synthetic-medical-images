@@ -18,7 +18,7 @@ labels_as_titles = {
     }
 
 
-def plot_real_images() -> None:
+def plot_real_images(_show: bool = False) -> None:
     figure = plt.figure(figsize=(8, 8))
     cols, rows = 3, 3
     _dataset = HAM10000Dataset()
@@ -34,10 +34,13 @@ def plot_real_images() -> None:
         plt.imshow(img.permute(1, 2, 0))
     plt.tight_layout(pad=1.02)
     plt.savefig(os.path.join('.img', 'original_samples.png'), dpi=200)
-    plt.show()
+    if _show:
+        plt.show()
+    plt.close()
 
 
-def plot_fake_images(generator, n_images: int = 10) -> None:
+def plot_fake_images(
+        generator, n_images: int = 10, _show: bool = False) -> None:
     figure = plt.figure(figsize=(10, 10))
     cols, rows = 3, 3
 
@@ -62,4 +65,6 @@ def plot_fake_images(generator, n_images: int = 10) -> None:
         plt.imshow(images[i])
     plt.tight_layout(pad=1.02)
     plt.savefig(os.path.join('.img', 'fake_samples.png'), dpi=200)
-    plt.show()
+    if _show:
+        plt.show()
+    plt.close()

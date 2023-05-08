@@ -54,7 +54,7 @@ def _get_data_transforms() -> transforms.Compose:
     _mean, _std = 0, 1
     return transforms.Compose(
         [
-            transforms.Resize(IMAGE_SIZE),
+            transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
             transforms.ToTensor(),
             transforms.Normalize((_mean, _mean, _mean), (_std, _std, _std)),
         ]
