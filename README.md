@@ -1,5 +1,15 @@
-# synthetic-medical-images
-Using a GAN to synthetically generate medical images.
+# Generating synthetic medical images
+Automated diagnosis of any kind are hampered by the small size, lack of 
+diversity and expensiveness of available dataset of medical images. To tackle
+this problem, several approaches using generative models have been applied.
+
+Thence, in this project we will be using a (conditional) Generative 
+Adversarial Network (cGAN) to synthetically generate medical images; 
+concretely, of dermatoscopic images of pigmented skin lesions.
+
+### Original samples
+
+![Original samples of the HAM10000 dataset](.img/original_samples.png)
 
 ## Dataset
 

@@ -4,8 +4,9 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import transforms
 from typing import Tuple
+from torch import Generator as _DataGenerator
 
-from hamgan.static import BATCH_SIZE
+from hamgan.static import BATCH_SIZE, IMAGE_SIZE, SEED
 
 
 class HAM10000Dataset(Dataset):
@@ -46,9 +47,9 @@ class HAM10000Dataset(Dataset):
 def _get_data_transforms():
     return transforms.Compose(
         [
-            # transforms.Resize((224, 224)),
+            transforms.Resize(IMAGE_SIZE),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[.5], std=[.5]),
+            transforms.Normalize(mean=(.5, .5, .5), std=(.5, .5, .5)),
         ]
     )
 
@@ -57,7 +58,9 @@ def get_data_loaders() \
         -> Tuple[DataLoader, DataLoader, DataLoader, DataLoader]:
     # load and split the data
     dataset = HAM10000Dataset()
-    _train, _val, _test = random_split(dataset, [.6, .2, .2])
+    _train, _val, _test = random_split(
+        dataset, [.6, .2, .2],
+        generator=_DataGenerator().manual_seed(SEED))
 
     # ingest torch datasets data into torch dataloader
     train_loader = DataLoader(
