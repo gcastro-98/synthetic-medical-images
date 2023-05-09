@@ -8,9 +8,25 @@ Generative Adversarial Network](https://arxiv.org/abs/1411.1784)
 (_cDCGAN_) to synthetically generate medical images; concretely, 
 dermatological images of pigmented skin lesions.
 
+![Generated samples during the training process](.img/generated_samples.gif)
+
 ### Original samples
 
 ![Original samples of the HAM10000 dataset](.img/original_samples.png)
+
+### Generated samples
+
+![Generated samples from random noise and arbitrary labels](.img/fake_samples.png)
+
+This were generated after a training with `IMAGE_SIZE = 64` and the current 
+hyperparameters, which yielded the following error losses during training: 
+
+![Losses during training](.img/losses.png)
+
+It is trivial to see the discriminator was too simple to keep improving at 
+some point (its predictive performance was eventually at a standstill, 
+preventing the generator to improve). This is due to the fact 
+**no fine-tuning was yet carried out.** 
 
 ## Dataset
 

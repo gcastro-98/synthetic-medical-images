@@ -4,13 +4,13 @@ execution.
 """
 
 from torch import device
-from torch.cuda import is_available
+from torch.cuda import is_available, device_count
 
 # ---------------------
 # General parameters
 # ---------------------
 SEED: int = 42
-NUM_WORKERS: int = 2
+NUM_WORKERS: int = 4 * device_count()  # 4 * num_GPU as rule of thumb
 INPUT_PATH: str = 'data'
 OUTPUT_PATH: str = 'output'
 MODELS_PATH: str = 'models'
@@ -37,7 +37,7 @@ NUM_CLASSES: int = len(LABEL_TO_CLASS)
 # Training parameters
 # ---------------------
 BATCH_SIZE: int = 64 if IMAGE_SIZE == 64 else 32
-NUM_EPOCHS: int = 120
+NUM_EPOCHS: int = 200
 
 # ---------------------
 # Hyperparameters
@@ -49,7 +49,7 @@ BETA_1: float = 0.5
 # same nomenclature
 # as https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html
 nz: int = 128  # length of latent vector
-ngf: int = 64  # depth of feature maps carried through the generator.
+ngf: int = 128  # depth of feature maps carried through the generator.
 ndf: int = 64  # depth of feature maps propagated through the discriminator
 # ngpu: int = 1
 nc: int = 3  # number of color channels (for color images = 3)

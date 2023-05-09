@@ -1,8 +1,8 @@
 import os.path
-
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+from typing import Tuple
 
 from hamgan.static import nz, DEVICE, NUM_CLASSES, CLASS_TO_LABEL
 from hamgan.data import HAM10000Dataset
@@ -40,10 +40,29 @@ def plot_real_images(_show: bool = False) -> None:
 
 
 def plot_fake_images(
-        generator, n_images: int = 10, _show: bool = False) -> None:
-    figure = plt.figure(figsize=(10, 10))
+        generator, n_images: int = 9, _show: bool = False) -> None:
     cols, rows = 3, 3
+    fig, axs = plt.subplots(rows, cols, sharex='all')
+    axs = axs.flatten()
 
+    gen_z, label, _label_names = __generate_random_inputs(n_images)
+    gen_images = generator(gen_z, label)
+    images = gen_images.to("cpu").clone().detach()
+    images = images.numpy().transpose(0, 2, 3, 1)
+
+    for i in range(9):
+        axs[i].set_title(_label_names[i])
+        axs[i].set_axis_off()
+        axs[i].imshow(images[i])
+    plt.tight_layout(pad=1.04)
+    plt.savefig(os.path.join('.img', 'fake_samples.png'), dpi=200)
+    if _show:
+        plt.show()
+    plt.close()
+
+
+def __generate_random_inputs(n_images: int) \
+        -> Tuple[torch.Tensor, torch.Tensor, list]:
     gen_z = torch.randn(n_images, nz, device=DEVICE)
     label = torch.zeros(n_images, NUM_CLASSES, device=DEVICE)
     _label_names = []
@@ -51,20 +70,4 @@ def plot_fake_images(
         x = np.random.randint(0, NUM_CLASSES)
         label[i][x] = 1
         _label_names.append(labels_as_titles[CLASS_TO_LABEL[x]])
-
-    gen_images = generator(gen_z, label)
-    images = gen_images.to("cpu").clone().detach()
-    images = images.numpy().transpose(0, 2, 3, 1)
-
-    plt.figure(figsize=(10, 10))
-    for i in range(9):
-        # plt.subplot(3, 3, i+1)
-        figure.add_subplot(rows, cols, i + 1)
-        plt.title(_label_names[i])
-        plt.axis("off")
-        plt.imshow(images[i])
-    plt.tight_layout(pad=1.02)
-    plt.savefig(os.path.join('.img', 'fake_samples.png'), dpi=200)
-    if _show:
-        plt.show()
-    plt.close()
+    return gen_z, label, _label_names
