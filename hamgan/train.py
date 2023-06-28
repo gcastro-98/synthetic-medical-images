@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn as nn, optim as optim
-from torch import Tensor
+from torch import Tensor, device
 from torchvision.utils import save_image
 from torch.utils.data import DataLoader
 from typing import List, Tuple
 
 from hamgan.logger import Logger
 from hamgan.static import SEED, LEARNING_RATE, BETA_1, NUM_EPOCHS, \
-    LABEL_TO_CLASS, OUTPUT_PATH, MODELS_PATH, IMAGE_SIZE, nz, DEVICE, \
+    LABEL_TO_CLASS, OUTPUT_PATH, MODELS_PATH, IMAGE_SIZE, nz, \
     BATCH_SIZE, NUM_CLASSES
+from hamgan.static import DEVICE as _DEVICE
 
 if IMAGE_SIZE == 64:
     from hamgan.gan import Generator64 as Generator
@@ -34,11 +35,11 @@ def seed_everything():
 
 
 def __generate_random_noise() -> Tensor:
-    return torch.randn(BATCH_SIZE, nz, device=DEVICE)
+    return torch.randn(BATCH_SIZE, nz, device=_DEVICE)
 
 
 def __generate_random_labels() -> Tensor:
-    label = torch.zeros(BATCH_SIZE, NUM_CLASSES, device=DEVICE)
+    label = torch.zeros(BATCH_SIZE, NUM_CLASSES, device=_DEVICE)
     for i in range(BATCH_SIZE):
         x = np.random.randint(0, NUM_CLASSES)
         label[i][x] = 1
@@ -57,10 +58,11 @@ os.makedirs(MODELS_PATH, exist_ok=True)
 logger = Logger()
 
 
-def train_gan(data_loader: DataLoader, _save_images: bool = True,
-              _checkpoint: bool = True, _freq: int = 5) \
-        -> Tuple[Generator, Discriminator]:
-
+def train_gan(
+        data_loader: DataLoader, use_cpu: bool = False,
+        save_best_model: bool = True, save_generated_images: bool = True,
+        verbose: bool = False, _freq: int = 5) -> Tuple[Generator, Discriminator]:
+    DEVICE = device('cpu') if use_cpu else _DEVICE
     # initialize (with weights) generator and discriminator
     net_g = Generator().to(DEVICE)
     net_g.apply(weights_init)
@@ -121,7 +123,7 @@ def train_gan(data_loader: DataLoader, _save_images: bool = True,
             # D_G_z2 = output.mean().item()
             optimizer_g.step()
 
-            if (i + 1) % (BATCH_SIZE // 4) == 0:
+            if (i + 1) % (BATCH_SIZE // 4) == 0 and verbose:
                 # we print the losses
                 _counter = f"Epoch [{epoch}/{NUM_EPOCHS}]" \
                            f"[{i}/{len(data_loader)}]"
@@ -131,19 +133,20 @@ def train_gan(data_loader: DataLoader, _save_images: bool = True,
         if (epoch + 1) % _freq == 0:
             # we save generated images
             with torch.no_grad():
-                logger.debug("CHECKPOINT: saving some "
-                             f"generated images at '{OUTPUT_PATH}' directory")
-
-                checkpoint_images = net_g(
-                    _checkpoint_noise, _checkpoint_labels)
-
-                # we re-scale generated images to [0, 1] and save them
-                save_image((checkpoint_images + 1) / 2,
-                           os.path.join(OUTPUT_PATH, f"epoch_{epoch + 1}.png"),
-                           nrow=8, normalize=True)
+                if save_generated_images:
+                    logger.debug(
+                        "CHECKPOINT: saving some generated images "
+                        f"at '{OUTPUT_PATH}' directory")
+                    checkpoint_images = net_g(
+                        _checkpoint_noise, _checkpoint_labels)
+                    # we re-scale generated images to [0, 1] and save them
+                    save_image((checkpoint_images + 1) / 2,
+                               os.path.join(OUTPUT_PATH,
+                                            f"epoch_{epoch + 1}.png"),
+                               nrow=8, normalize=True)
 
             # save models as checkpoint
-            if _checkpoint:
+            if save_best_model:
                 logger.debug("CHECKPOINT: saving the trained"
                              f" models at '{MODELS_PATH}' directory")
                 torch.save(net_g.state_dict(),
